@@ -1,71 +1,428 @@
-import Image from 'next/image';
-import { TokenGate } from '@/components/TokenGate';
-import { getSession } from '@/utils/session';
+'use client';
 
-/**
- * The revalidate property determine's the cache TTL for this page and
- * all fetches that occur within it. This value is in seconds.
- */
-export const revalidate = 180;
+import { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  BarChart,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  FileText,
+  PieChart,
+  Send,
+  Upload,
+  Users,
+} from 'lucide-react';
 
-async function Content({ searchParams }: { searchParams: SearchParams }) {
-  const data = await getSession(searchParams);
-  // Console log the data to see what's available
-  // You can see these logs in the terminal where
-  // you run `yarn dev`
-  console.log({ data });
+export default function ExpenseManagementPortal() {
+  const [role, setRole] = useState('coordinator');
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Internal Page&nbsp;
-          {data.internalUser && (
-            <code className="font-mono font-bold">
-              — Logged in as {data.internalUser.givenName}{' '}
-              {data.internalUser.familyName}
-            </code>
-          )}
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://copilot.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/copilot_icon.png"
-              alt="Copilot Icon"
-              className="dark:invert"
-              width={24}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Expense Management Portal</h1>
+      <Select value={role} onValueChange={setRole}>
+        <SelectTrigger className="w-[280px] mb-4">
+          <SelectValue placeholder="Select your role" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="coordinator">Clinical Site Coordinator</SelectItem>
+          <SelectItem value="manager">Clinical Operations</SelectItem>
+        </SelectContent>
+      </Select>
 
-      <div className="flex-col mb-32 text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <h2 className={`mb-3 text-2xl font-semibold`}>
-          This page is served to internal users.
-        </h2>
-        <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-          This is an example of a page that is served to internal users only.
-        </p>
-      </div>
-    </main>
+      {role === 'coordinator' ? <CoordinatorView /> : <ManagerView />}
+    </div>
   );
 }
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+function CoordinatorView() {
   return (
-    <TokenGate searchParams={searchParams}>
-      <Content searchParams={searchParams} />
-    </TokenGate>
+    <Tabs defaultValue="submit" className="w-full">
+      <TabsList>
+        <TabsTrigger value="submit">Submit Expense</TabsTrigger>
+        <TabsTrigger value="status">Status Tracking</TabsTrigger>
+        <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+      </TabsList>
+      <TabsContent value="submit">
+        <Card>
+          <CardHeader>
+            <CardTitle>Submit Expense</CardTitle>
+            <CardDescription>
+              Enter your expense details and upload receipts.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="expense-type">Expense Type</Label>
+                  <Select>
+                    <SelectTrigger id="expense-type">
+                      <SelectValue placeholder="Select expense type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="travel">Travel</SelectItem>
+                      <SelectItem value="meals">Meals</SelectItem>
+                      <SelectItem value="supplies">Supplies</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Amount</Label>
+                  <Input id="amount" type="number" placeholder="Enter amount" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  placeholder="Enter expense description"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="receipt">Upload Receipt</Label>
+                <Input id="receipt" type="file" />
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter>
+            <Button>
+              <Send className="mr-2 h-4 w-4" /> Submit Expense
+            </Button>
+          </CardFooter>
+        </Card>
+      </TabsContent>
+      <TabsContent value="status">
+        <Card>
+          <CardHeader>
+            <CardTitle>Expense Status</CardTitle>
+            <CardDescription>
+              Track the status of your submitted expenses.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>2024-10-01</TableCell>
+                  <TableCell>Travel to UCSF</TableCell>
+                  <TableCell>$550.00</TableCell>
+                  <TableCell>
+                    <Badge variant="default">Paid</Badge>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>2024-10-02</TableCell>
+                  <TableCell>Taxi</TableCell>
+                  <TableCell>$75.50</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">Under Review</Badge>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>2024-10-02</TableCell>
+                  <TableCell>Food</TableCell>
+                  <TableCell>$120.00</TableCell>
+                  <TableCell>
+                    <Badge>Submitted</Badge>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      <TabsContent value="dashboard">
+        <Card>
+          <CardHeader>
+            <CardTitle>Expense Dashboard</CardTitle>
+            <CardDescription>
+              Summary of your expenses and reimbursements.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Submitted
+                  </CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$1,245.50</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Reimbursed
+                  </CardTitle>
+                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$980.00</div>
+                </CardContent>
+              </Card>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
+  );
+}
+
+function ManagerView() {
+  return (
+    <Tabs defaultValue="review" className="w-full">
+      <TabsList>
+        <TabsTrigger value="review">Review Expenses</TabsTrigger>
+        <TabsTrigger value="reports">Expense Reports</TabsTrigger>
+        <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        <TabsTrigger value="communication">Communication</TabsTrigger>
+      </TabsList>
+      <TabsContent value="review">
+        <Card>
+          <CardHeader>
+            <CardTitle>Review Expenses</CardTitle>
+            <CardDescription>
+              Approve or reject submitted expenses.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Site</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>2024-10-02</TableCell>
+                  <TableCell>UCSF Patient 4</TableCell>
+                  <TableCell>Food</TableCell>
+                  <TableCell>$120.00</TableCell>
+                  <TableCell>
+                    <Badge>Pending</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="outline" size="sm" className="mr-2">
+                      Approve
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      Reject
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>2024-10-01</TableCell>
+                  <TableCell>UCSF Patient 4</TableCell>
+                  <TableCell>Travel Expenses</TableCell>
+                  <TableCell>$550.00</TableCell>
+                  <TableCell>
+                    <Badge variant="destructive">Under Review</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="outline" size="sm" className="mr-2">
+                      Approve
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      Reject
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      <TabsContent value="reports">
+        <Card>
+          <CardHeader>
+            <CardTitle>Expense Reports</CardTitle>
+            <CardDescription>
+              Detailed expense reports across all sites.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">
+                  Total Expenses by Site
+                </h3>
+                <Select defaultValue="all">
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Time</SelectItem>
+                    <SelectItem value="month">This Month</SelectItem>
+                    <SelectItem value="quarter">This Quarter</SelectItem>
+                    <SelectItem value="year">This Year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Site</TableHead>
+                    <TableHead>Total Expenses</TableHead>
+                    <TableHead>Approved</TableHead>
+                    <TableHead>Pending</TableHead>
+                    <TableHead>Rejected</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>UCSF Patient 4</TableCell>
+                    <TableCell>$5,230.00</TableCell>
+                    <TableCell>$4,500.00</TableCell>
+                    <TableCell>$730.00</TableCell>
+                    <TableCell>$0.00</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>UCSF Patient 5</TableCell>
+                    <TableCell>$3,750.00</TableCell>
+                    <TableCell>$3,200.00</TableCell>
+                    <TableCell>$350.00</TableCell>
+                    <TableCell>$200.00</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      <TabsContent value="analytics">
+        <Card>
+          <CardHeader>
+            <CardTitle>Expense Analytics</CardTitle>
+            <CardDescription>
+              Analyze spending patterns and trends.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Expense by Category
+                  </CardTitle>
+                  <PieChart className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[200px] w-full bg-muted rounded-md"></div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Monthly Expenses
+                  </CardTitle>
+                  <BarChart className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[200px] w-full bg-muted rounded-md"></div>
+                </CardContent>
+              </Card>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      <TabsContent value="communication">
+        <Card>
+          <CardHeader>
+            <CardTitle>Communication</CardTitle>
+            <CardDescription>
+              Interact with site coordinators regarding expense queries.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-4">
+                <Avatar>
+                  <AvatarImage
+                    src="/placeholder-user.jpg"
+                    alt="Site Coordinator"
+                  />
+                  <AvatarFallback>SC</AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Site Coordinator (UCSF)</p>
+                  <p className="text-sm text-muted-foreground">
+                    Could you please provide more details about the travel
+                    expenses from Oct 1st?
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-4">
+                <Avatar>
+                  <AvatarImage
+                    src="/placeholder-user.jpg"
+                    alt="Program Manager"
+                  />
+                  <AvatarFallback>PM</AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">You</p>
+                  <p className="text-sm text-muted-foreground">
+                    Certainly, I&apos;ll need a breakdown of the transportation
+                    costs and any receipts for meals or accommodations.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Input placeholder="Type your message..." />
+                <Button size="icon">
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
 }
